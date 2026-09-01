@@ -1,0 +1,517 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#000000">
+<title>POMODORO · LOG</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Antonio:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --orange:#ff9900; --salmon:#ff9966; --tan:#ffcc99; --butter:#ffcc66;
+    --lilac:#cc99cc; --peri:#9999cc; --ice:#99ccff; --sky:#6699cc; --teal:#66cccc;
+    --rose:#cc6666; --alert:#ff3333;
+    --g1:#1a1a1a; --g2:#2a2a2a; --g3:#3a3a3a; --txt:#f2ede6;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%;background:#000}
+  body{
+    font-family:"Antonio","Swiss 911","Helvetica Neue","Arial Narrow",Arial,sans-serif;font-stretch:condensed;
+    color:var(--txt);background:#000;min-height:100vh;min-height:100dvh;
+    padding:calc(env(safe-area-inset-top) + 10px) 10px calc(env(safe-area-inset-bottom) + 30px);
+    -webkit-tap-highlight-color:transparent;text-transform:uppercase;letter-spacing:.02em;
+  }
+  .app{max-width:430px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+  .num{font-variant-numeric:tabular-nums}
+
+  /* ---------- header bar ---------- */
+  .top{display:grid;grid-template-columns:52px 1fr 26px;gap:4px;height:26px;align-items:stretch}
+  .top .cap{background:var(--tan);border-radius:13px 0 0 13px}
+  .top .mid{background:var(--orange);display:flex;align-items:center;justify-content:flex-end;padding:0 10px;color:#000;font-weight:700;font-size:15px;gap:10px}
+  .top .mid .tag{font-size:11px;font-weight:400;opacity:.75}
+  .top .end{background:var(--lilac);border-radius:0 13px 13px 0}
+
+  /* ---------- LCARS elbow frame ---------- */
+  .lc{position:relative;padding:18px 0 8px 40px;background:var(--c);border-radius:36px 0 0 16px}
+  .lc .in{background:#000;border-radius:22px 0 0 8px;padding:12px 8px 12px 12px;min-height:70px}
+  .lc .ttl{position:absolute;top:0;right:14px;height:18px;line-height:18px;font-size:12px;font-weight:700;color:#000}
+  .lc .code{position:absolute;top:0;left:46px;height:18px;line-height:18px;font-size:10px;color:#000;opacity:.75}
+  .lc .rail{position:absolute;left:0;top:64px;bottom:8px;width:40px;display:flex;flex-direction:column;gap:3px;background:#000;border-radius:0 0 0 16px;overflow:hidden}
+  .lc .rail i{display:block;background:var(--c2)}
+  .lc .rail i:nth-child(1){flex:3}
+  .lc .rail i:nth-child(2){flex:1;background:var(--c3)}
+  .lc .rail i:nth-child(3){flex:2;background:var(--c)}
+  .lc .rail i:nth-child(1)::after{content:attr(data-n);display:block;text-align:right;padding:4px 4px 0 0;font-size:9px;color:#000;font-weight:700}
+  .lc.timer{--c:var(--orange);--c2:var(--salmon);--c3:var(--butter)}
+  .lc.cfg{--c:var(--lilac);--c2:var(--peri);--c3:var(--tan)}
+  .lc.prog{--c:var(--butter);--c2:var(--tan);--c3:var(--salmon)}
+  .lc.log{--c:var(--ice);--c2:var(--sky);--c3:var(--peri)}
+  .lc .bot{position:absolute;left:40px;right:0;bottom:0;height:8px;background:#000}
+  .lc .bot::before{content:"";position:absolute;left:0;top:0;height:8px;width:34%;background:var(--c3);border-radius:0 4px 4px 0}
+  .lc .bot::after{content:"";position:absolute;right:0;top:0;height:8px;width:22%;background:var(--c2);border-radius:4px 0 0 4px}
+
+  /* ---------- flat buttons ---------- */
+  .b{font:inherit;font-stretch:condensed;border:0;background:var(--bc,var(--tan));color:#000;font-weight:700;font-size:13px;letter-spacing:.03em;text-transform:uppercase;
+    cursor:pointer;padding:0 14px;height:40px;border-radius:20px 6px 6px 20px;text-align:right;display:flex;align-items:flex-end;justify-content:flex-end;padding-bottom:6px;
+    transition:filter .1s,opacity .1s}
+  .b:active{filter:brightness(1.25)}
+  .b:focus-visible{outline:2px solid #fff;outline-offset:2px}
+  .b:disabled{opacity:.28;cursor:default}
+  .b.arm{--bc:var(--alert);color:#fff}
+  .b.pill{border-radius:20px;justify-content:center;align-items:center;padding-bottom:0}
+  .b.sm{height:30px;font-size:11px;padding:0 12px}
+  .circ{width:66px;height:66px;border-radius:50%;padding:0;display:flex;align-items:center;justify-content:center;font-size:12px;text-align:center}
+
+  /* ---------- timer ---------- */
+  .status{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--tan);margin-bottom:6px}
+  .status .ind{width:44px;height:10px;border-radius:5px;background:var(--g3)}
+  .status .ind.on{background:var(--orange)}
+  .status .ind.brk{background:var(--ice)}
+  .status .ind.pz{background:var(--butter)}
+  .status b{color:var(--salmon);font-weight:700}
+  .gauge{position:relative;width:min(62vw,214px);margin:2px auto 0;aspect-ratio:1}
+  .ring-svg{width:100%;height:100%;transform:rotate(-90deg);display:block}
+  .ring-svg circle{fill:none}
+  .ring-track{stroke:var(--g2);stroke-width:9}
+  .ring-prog{stroke:var(--orange);stroke-width:9;stroke-linecap:round;stroke-dasharray:653.45;stroke-dashoffset:653.45;transition:stroke-dashoffset 1s linear}
+  .break .ring-prog{stroke:var(--ice)}
+  .gmid{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+  .clock{font-size:clamp(50px,17vw,74px);font-weight:700;line-height:.9;letter-spacing:0;color:var(--txt)}
+  .running .clock{color:var(--salmon)}
+  .running.break .clock{color:var(--ice)}
+  .phase{font-size:12px;color:var(--tan);margin:14px auto 0;padding:6px 14px;text-align:center;background:var(--g1);border-radius:14px;display:table;letter-spacing:.06em}
+  .running .phase{color:#000;background:var(--salmon)}
+  .running.break .phase{background:var(--ice)}
+  .segs{display:flex;gap:4px;margin:12px 4px 0}
+  .segs i{flex:1;height:10px;border-radius:5px;background:var(--g2)}
+  .segs i.on{background:var(--tan)}
+  .break .segs i.on{background:var(--sky)}
+  .controls{margin-top:14px;display:flex;flex-direction:column;gap:12px;align-items:center}
+  .controls .b-start{--bc:var(--orange);width:100%;height:46px;font-size:15px}
+  .row3{display:flex;justify-content:center;gap:18px}
+  .b-pause{--bc:var(--butter)} .b-skip{--bc:var(--ice)} .b-reset{--bc:var(--rose)}
+  .b-end{--bc:var(--lilac);width:150px}
+  #cycle{font-size:10px;color:var(--peri);margin-top:10px;min-height:12px;text-align:center}
+
+  /* ---------- config ---------- */
+  label{display:block;font-size:10px;color:var(--peri);margin-bottom:5px}
+  input[type=number],input[type=text]{width:100%;font:inherit;font-stretch:condensed;font-size:16px;font-weight:700;background:var(--g1);color:var(--tan);
+    border:0;border-bottom:3px solid var(--lilac);border-radius:6px 6px 0 0;padding:9px 10px;-webkit-appearance:none;appearance:none;text-transform:uppercase}
+  input:focus{outline:0;border-bottom-color:var(--orange)}
+  .row{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end;margin-bottom:12px}
+  .row .b{height:40px;min-width:44px}
+  .durs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;max-width:260px}
+  .durs .cell{background:var(--g1);border-radius:6px;border-top:3px solid var(--lilac);padding:3px 3px 4px;text-align:center}
+  .durs .cell:nth-child(2){border-top-color:var(--tan)} .durs .cell:nth-child(3){border-top-color:var(--peri)}
+  .durs .cell input{background:transparent;border:0;border-radius:0;padding:0;width:100%;text-align:center;font-size:22px;line-height:1.1;color:var(--tan);font-weight:700}
+  .durs .cell input:focus{outline:0;color:var(--orange)}
+  .durs .cell span{display:block;font-size:9px;color:var(--peri);margin-top:1px}
+  .lb{display:flex;align-items:center;gap:10px;margin:12px 0 10px}
+  .lb label{margin:0;flex:none} .lb input{width:66px;text-align:center} .lb .unit{font-size:10px;color:var(--peri)}
+  .note{font-size:10px;line-height:1.7;color:var(--peri);margin-top:6px;padding-left:9px;border-left:3px solid var(--lilac);border-radius:2px;text-transform:none;letter-spacing:0}
+
+  /* custom dropdown (flat) */
+  .native-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);border:0}
+  .dd{position:relative}
+  .dd-trigger{width:100%;font:inherit;font-stretch:condensed;font-size:14px;font-weight:700;color:#000;cursor:pointer;display:flex;align-items:center;
+    height:40px;border:0;border-radius:20px;overflow:hidden;background:var(--lilac);text-transform:uppercase;letter-spacing:.04em;padding:0 12px}
+  .dd-caret{width:14px;flex:none;font-size:10px;transition:transform .15s;text-align:right}
+  .dd-trigger::before{content:"";width:14px;flex:none}
+  .dd-label{flex:1;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .dd-trigger[aria-expanded="true"] .dd-caret{transform:rotate(180deg)}
+  .dd-menu{list-style:none;margin:6px 0 0;display:none;flex-direction:column;gap:3px;max-height:250px;overflow:auto;-webkit-overflow-scrolling:touch}
+  .dd-menu.show{display:flex}
+  .dd-item{display:flex;align-items:center;justify-content:center;height:34px;border-radius:17px;background:var(--g1);color:var(--txt);font-size:13px;font-weight:700;cursor:pointer;letter-spacing:.04em}
+  .dd-item.sel{background:var(--tan);color:#000}
+  .dd-item:active{filter:brightness(1.2)}
+
+  /* ---------- progress ---------- */
+  .range{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-bottom:12px}
+  .range .b{--bc:var(--g3);color:var(--txt);height:30px;font-size:11px;padding:0 8px 4px;border-radius:6px}
+  .range .b:first-child{border-radius:15px 6px 6px 15px} .range .b:last-child{border-radius:6px 15px 15px 6px}
+  .range .b.on{--bc:var(--butter);color:#000}
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+  .stat{background:var(--g1);border-radius:6px;padding:8px 8px 7px;border-top:4px solid var(--sc)}
+  .stat:nth-child(1){--sc:var(--salmon)} .stat:nth-child(2){--sc:var(--tan)} .stat:nth-child(3){--sc:var(--lilac)}
+  .stat b{display:block;font-size:22px;font-weight:700;line-height:1;color:var(--sc)}
+  .stat span{font-size:9px;color:var(--peri)}
+  .bars{display:flex;flex-direction:column;gap:6px}
+  .bars .r{display:grid;grid-template-columns:90px 1fr 54px;gap:8px;align-items:center;font-size:11px}
+  .bars .r .t{height:10px;background:var(--g2);border-radius:5px;overflow:hidden}
+  .bars .r .t i{display:block;height:100%;border-radius:5px}
+  .bars .r .n{text-align:right;color:var(--peri);font-size:10px}
+  .bars .r .s{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--tan)}
+  .tagc{display:inline-block;width:10px;height:10px;border-radius:5px 2px 2px 5px;margin-right:6px;vertical-align:middle}
+
+  /* ---------- log ---------- */
+  .tbl{max-height:250px;overflow:auto;-webkit-overflow-scrolling:touch;border-radius:6px;background:var(--g1)}
+  table{width:100%;border-collapse:collapse;font-size:11px}
+  th,td{text-align:left;padding:7px 8px;border-bottom:2px solid #000}
+  th{color:var(--ice);font-weight:700;position:sticky;top:0;background:var(--g1);z-index:1}
+  td{color:var(--tan)} td:first-child,td:nth-child(2){color:var(--peri)}
+  td:last-child,th:last-child{text-align:right}
+  .empty{color:var(--peri);font-size:11px;padding:10px 4px;text-transform:none;letter-spacing:0}
+  .logtools{display:flex;justify-content:center;gap:8px;margin-top:12px;flex-wrap:wrap}
+  .logtools .b{height:32px;font-size:11px}
+  .b-backup{--bc:var(--tan)} .b-csv{--bc:var(--ice)} .b-clear{--bc:var(--rose)}
+
+  .toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 16px);transform:translateX(-50%);background:var(--butter);color:#000;padding:8px 16px;font-size:12px;font-weight:700;border-radius:16px;z-index:40;opacity:0;pointer-events:none;transition:opacity .2s;max-width:90vw;text-align:center}
+  .toast.show{opacity:1}
+  @media (prefers-reduced-motion:reduce){.ring-prog{transition:none}}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <div class="top"><span class="cap"></span><span class="mid"><span class="tag num">LCARS 47·2231</span>POMODORO · LOG</span><span class="end"></span></div>
+
+  <section class="lc timer" id="timerPanel">
+    <span class="code num">01-TIMER</span><span class="ttl">FOCUS CONTROL</span>
+    <span class="rail"><i data-n="47"></i><i></i><i></i></span><span class="bot"></span>
+    <div class="in">
+      <div class="status"><span>UNIT 01</span><span class="ind" id="ind"></span><span>STATUS <b id="statusWord">IDLE</b></span></div>
+      <div class="gauge">
+        <svg class="ring-svg" viewBox="0 0 240 240" aria-hidden="true">
+          <circle class="ring-track" cx="120" cy="120" r="104"></circle>
+          <circle class="ring-prog" id="ring" cx="120" cy="120" r="104"></circle>
+        </svg>
+        <div class="gmid"><div class="clock num" id="clock">25:00</div></div>
+      </div>
+      <div class="phase" id="phase">SELECT A SUBJECT</div>
+      <div class="segs" id="dots"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="controls">
+        <button class="b pill b-start" id="startBtn">START</button>
+        <div class="row3">
+          <button class="b circ b-pause" id="pauseBtn" disabled>PAUSE</button>
+          <button class="b circ b-reset" id="resetBtn">RESET</button>
+          <button class="b circ b-skip" id="skipBtn" disabled>SKIP</button>
+        </div>
+        <button class="b pill sm b-end" id="endBtn" disabled>END + LOG</button>
+      </div>
+      <div id="cycle" class="num"></div>
+    </div>
+  </section>
+
+  <section class="lc cfg">
+    <span class="code num">02-CFG</span><span class="ttl">CONFIGURATION</span>
+    <span class="rail"><i data-n="12"></i><i></i><i></i></span><span class="bot"></span>
+    <div class="in">
+      <label for="ddTrigger">Subject</label>
+      <div class="row">
+        <div class="dd" id="dd">
+          <button type="button" class="dd-trigger" id="ddTrigger" aria-haspopup="listbox" aria-expanded="false">
+            <span class="dd-label" id="ddLabel">Calculus</span><span class="dd-caret">▼</span>
+          </button>
+          <ul class="dd-menu" id="ddMenu" role="listbox"></ul>
+          <select id="subject" class="native-hidden" tabindex="-1" aria-hidden="true"></select>
+        </div>
+        <button class="b" id="addSubjBtn" style="--bc:var(--peri)" title="Add a subject">+</button>
+      </div>
+      <div id="addSubjRow" class="row" style="display:none">
+        <div><label for="newSubj">New subject</label><input type="text" id="newSubj" placeholder="e.g. Greek" maxlength="32"></div>
+        <button class="b" id="saveSubjBtn" style="--bc:var(--tan)">ADD</button>
+      </div>
+      <label>Minutes</label>
+      <div class="durs">
+        <div class="cell"><input type="number" id="focusMin" min="1" max="180" value="25" inputmode="numeric"><span>Focus</span></div>
+        <div class="cell"><input type="number" id="shortMin" min="1" max="60" value="5" inputmode="numeric"><span>Short</span></div>
+        <div class="cell"><input type="number" id="longMin" min="1" max="90" value="15" inputmode="numeric"><span>Long</span></div>
+      </div>
+      <div class="lb"><label for="every">Long break every</label><input type="number" id="every" min="2" max="8" value="4" inputmode="numeric"><span class="unit">blocks</span></div>
+      <div class="note">Focus = one work block (the only time that's logged). Short = break after each block. Long = the bigger break after every N blocks. End + log saves partial time, then stops. Reset discards.</div>
+    </div>
+  </section>
+
+  <section class="lc prog">
+    <span class="code num">03-PROG</span><span class="ttl">PROGRESS</span>
+    <span class="rail"><i data-n="88"></i><i></i><i></i></span><span class="bot"></span>
+    <div class="in">
+      <div class="range">
+        <button class="b on" data-range="today">TODAY</button><button class="b" data-range="week">WEEK</button>
+        <button class="b" data-range="month">MONTH</button><button class="b" data-range="all">ALL</button>
+      </div>
+      <div class="stats">
+        <div class="stat"><b class="num" id="stTime">0h 00m</b><span>Focused</span></div>
+        <div class="stat"><b class="num" id="stSessions">0</b><span>Sessions</span></div>
+        <div class="stat"><b class="num" id="stStreak">0</b><span>Day streak</span></div>
+      </div>
+      <div class="bars" id="bars"></div>
+    </div>
+  </section>
+
+  <section class="lc log">
+    <span class="code num">04-LOG</span><span class="ttl">SESSION LOG</span>
+    <span class="rail"><i data-n="03"></i><i></i><i></i></span><span class="bot"></span>
+    <div class="in">
+      <div class="tbl"><table><thead><tr><th>Date</th><th>Start</th><th>Subject</th><th>Min</th></tr></thead><tbody id="logBody"></tbody></table></div>
+      <div class="empty" id="logEmpty">No sessions yet. The first completed block lands here.</div>
+      <div class="logtools">
+        <button class="b pill b-backup" id="backupBtn">BACKUP → NOTES</button>
+        <button class="b pill b-csv" id="exportBtn">CSV</button>
+        <button class="b pill b-clear" id="clearBtn">CLEAR</button>
+      </div>
+    </div>
+  </section>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const store = {
+  async get(k){
+    if (window.storage) { try { const r = await window.storage.get(k, false); return r ? r.value : null; } catch { return null; } }
+    try { return localStorage.getItem(k); } catch { return null; }
+  },
+  async set(k,v){
+    if (window.storage) { try { await window.storage.set(k, v, false); } catch {} return; }
+    try { localStorage.setItem(k, v); } catch {}
+  }
+};
+
+const PALETTE = ['#ff9966','#cc99cc','#99ccff','#ffcc66','#9999cc','#ffcc99','#66cccc','#cc6666','#ff9900','#9999ff','#cccc99','#cc9999'];
+const DEFAULT_SUBJECTS = ['Bible study','Calculus','Spanish','Work related','Philosophy','Coding & AI','Banquet Bot','Chess','Screenwriting','Reading','Drawing','Jiu-jitsu'];
+const RENAMES = { 'Coding (C++)':'Coding & AI', 'Coding':'Coding & AI' };
+const byName = (a,b) => a.localeCompare(b, undefined, {sensitivity:'base'});
+const RING_C = 653.45;
+let subjects = [...DEFAULT_SUBJECTS];
+let log = [];
+let settings = { focus:25, short:5, long:15, every:4, subject:'Calculus' };
+let range = 'today';
+let phase = 'idle', running = false, endAt = 0, remaining = 0, total = 0, tick = null, focusCount = 0, focusStartedAt = 0;
+
+const $ = id => document.getElementById(id);
+const pad = n => String(n).padStart(2,'0');
+const color = s => PALETTE[Math.max(0, subjects.indexOf(s)) % PALETTE.length];
+
+(async function init(){
+  const s = await store.get('pomo:settings'); if (s) settings = {...settings, ...JSON.parse(s)};
+  const sj = await store.get('pomo:subjects');
+  if (sj) { const saved = JSON.parse(sj).map(s => RENAMES[s] || s); const custom = saved.filter(s => !DEFAULT_SUBJECTS.includes(s)); subjects = [...DEFAULT_SUBJECTS, ...custom]; }
+  subjects = [...new Set(subjects)].sort(byName);
+  if (JSON.stringify(subjects) !== sj) store.set('pomo:subjects', JSON.stringify(subjects));
+  if (RENAMES[settings.subject]) settings.subject = RENAMES[settings.subject];
+  const lg = await store.get('pomo:log');
+  if (lg) { log = JSON.parse(lg); let moved = false; log.forEach(e => { if (RENAMES[e.subject]) { e.subject = RENAMES[e.subject]; moved = true; } }); if (moved) store.set('pomo:log', JSON.stringify(log)); }
+  $('focusMin').value = settings.focus; $('shortMin').value = settings.short;
+  $('longMin').value = settings.long; $('every').value = settings.every;
+  renderSubjects(); resetTimer(); renderAll();
+})();
+
+function saveSettings(){
+  settings.focus = +$('focusMin').value || 25; settings.short = +$('shortMin').value || 5;
+  settings.long = +$('longMin').value || 15; settings.every = +$('every').value || 4;
+  settings.subject = $('subject').value;
+  store.set('pomo:settings', JSON.stringify(settings));
+}
+['focusMin','shortMin','longMin','every'].forEach(id => $(id).addEventListener('change', () => { saveSettings(); if (phase==='idle') resetTimer(); }));
+
+/* dropdown + subjects */
+function renderSubjects(){
+  const sel = $('subject'); sel.innerHTML = '';
+  subjects.forEach(s => { const o = document.createElement('option'); o.value = o.textContent = s; sel.appendChild(o); });
+  if (!subjects.includes(settings.subject)) settings.subject = subjects[0] || '';
+  sel.value = settings.subject;
+  $('ddMenu').innerHTML = subjects.map((s,i) =>
+    `<li class="dd-item${s===settings.subject?' sel':''}" data-i="${i}" role="option">${esc(s)}</li>`).join('');
+  $('ddMenu').querySelectorAll('.dd-item').forEach(li => li.addEventListener('click', () => selectSubject(subjects[+li.dataset.i])));
+  $('ddLabel').textContent = settings.subject || '—';
+}
+function selectSubject(v){ sfx.select(); settings.subject = v; $('subject').value = v; saveSettings(); renderSubjects(); closeDd(); }
+let ddOpen = false;
+function openDd(){ ddOpen = true; $('ddMenu').classList.add('show'); $('ddTrigger').setAttribute('aria-expanded','true'); }
+function closeDd(){ ddOpen = false; $('ddMenu').classList.remove('show'); $('ddTrigger').setAttribute('aria-expanded','false'); }
+$('ddTrigger').onclick = e => { e.stopPropagation(); sfx.tap(); ddOpen ? closeDd() : openDd(); };
+document.addEventListener('click', e => { if (ddOpen && !$('dd').contains(e.target)) closeDd(); });
+$('addSubjBtn').onclick = () => { sfx.tap(); const r = $('addSubjRow'); r.style.display = r.style.display==='none' ? 'grid' : 'none'; $('newSubj').focus(); };
+$('saveSubjBtn').onclick = addSubject;
+$('newSubj').addEventListener('keydown', e => { if (e.key==='Enter') addSubject(); });
+function addSubject(){
+  const v = $('newSubj').value.trim(); if (!v) return;
+  if (!subjects.includes(v)) { subjects.push(v); subjects.sort(byName); store.set('pomo:subjects', JSON.stringify(subjects)); }
+  settings.subject = v; renderSubjects(); saveSettings(); sfx.end();
+  $('newSubj').value=''; $('addSubjRow').style.display='none'; toast('Added ' + v);
+}
+
+/* timer */
+function minutesFor(p){ return p==='focus' ? settings.focus : p==='short' ? settings.short : settings.long; }
+function setPhase(p){ phase = p; total = remaining = minutesFor(p)*60*1000; $('timerPanel').classList.toggle('break', p!=='focus'); draw(); }
+function setInd(){ const i = $('ind'); i.className = 'ind' + (phase==='idle' ? '' : running ? (phase==='focus' ? ' on' : ' brk') : ' pz'); }
+function resetTimer(){
+  stopTick(); running = false; focusCount = 0; phase = 'idle'; total = remaining = settings.focus*60*1000;
+  $('timerPanel').classList.remove('running','break');
+  $('phase').textContent = 'SELECT A SUBJECT'; $('cycle').textContent = ''; $('statusWord').textContent = 'IDLE';
+  $('startBtn').textContent = 'START'; $('startBtn').disabled = false;
+  $('pauseBtn').disabled = true; $('skipBtn').disabled = true; $('endBtn').disabled = true;
+  setInd(); draw();
+}
+function start(){
+  if (phase==='idle') setPhase('focus');
+  if (phase==='focus' && !focusStartedAt) focusStartedAt = Date.now();
+  running = true; endAt = Date.now() + remaining;
+  $('timerPanel').classList.add('running');
+  $('statusWord').textContent = phase==='focus' ? 'FOCUS' : 'BREAK';
+  $('startBtn').textContent = 'RUNNING'; $('startBtn').disabled = true;
+  $('pauseBtn').disabled = false; $('skipBtn').disabled = false; $('endBtn').disabled = false;
+  setInd(); stopTick(); tick = setInterval(step, 250); step();
+}
+function pause(){
+  running = false; remaining = Math.max(0, endAt - Date.now()); stopTick();
+  $('timerPanel').classList.remove('running'); $('statusWord').textContent = 'PAUSED';
+  $('startBtn').textContent = 'RESUME'; $('startBtn').disabled = false; $('pauseBtn').disabled = true;
+  setInd(); draw();
+}
+function stopTick(){ if (tick) { clearInterval(tick); tick = null; } }
+function step(){ remaining = Math.max(0, endAt - Date.now()); draw(); if (remaining <= 0) finishPhase(false); }
+function finishPhase(skipped){
+  stopTick(); running = false;
+  if (phase==='focus') {
+    const done = skipped ? Math.round((total - remaining)/60000) : Math.round(total/60000);
+    if (done >= 1) addLog(done);
+    focusCount++; focusStartedAt = 0; beep();
+    setPhase(focusCount % settings.every === 0 ? 'long' : 'short');
+  } else { if (!skipped) beep(); setPhase('focus'); }
+  $('startBtn').disabled = false; start();
+}
+function draw(){
+  const m = Math.floor(remaining/60000), s = Math.floor((remaining%60000)/1000);
+  $('clock').textContent = pad(m)+':'+pad(s);
+  document.title = (phase==='idle' ? '' : pad(m)+':'+pad(s)+' · ') + 'POMODORO · LOG';
+  const frac = total ? (total-remaining)/total : 0;
+  $('ring').style.strokeDashoffset = (RING_C*(1-frac)).toFixed(1);
+  const dots = document.querySelectorAll('#dots i'); const lit = Math.round(frac*dots.length);
+  dots.forEach((d,i) => d.classList.toggle('on', i < lit));
+  if (phase!=='idle') {
+    const label = phase==='focus' ? 'FOCUS' : phase==='short' ? 'SHORT BREAK' : 'LONG BREAK';
+    $('phase').textContent = (running ? '' : 'PAUSED · ') + label + (phase==='focus' ? ' · ' + $('subject').value : '');
+    $('cycle').textContent = 'BLOCK ' + (focusCount % settings.every + (phase==='focus'?1:0)) + ' OF ' + settings.every + (focusCount ? '  ·  ' + focusCount + ' DONE THIS RUN' : '');
+  }
+}
+$('startBtn').onclick = () => { sfx.start(); start(); };
+$('pauseBtn').onclick = () => { sfx.pause(); pause(); };
+$('skipBtn').onclick = () => { sfx.skip(); finishPhase(true); };
+$('endBtn').onclick = () => {
+  sfx.end();
+  if (phase==='focus') { const done = Math.round((total - remaining)/60000); if (done >= 1) addLog(done); else toast('Under a minute — nothing logged'); }
+  focusStartedAt = 0; disarm(); resetTimer();
+};
+/* two-tap confirm: first tap arms (red, "SURE?"), second tap within 3s confirms */
+let armed = null;
+function arm(btn, label, onConfirm){
+  if (armed && armed.btn === btn) { disarm(); onConfirm(); return; }
+  disarm(); sfx.arm();
+  btn.dataset.label = label; btn.textContent = 'SURE?'; btn.classList.add('arm');
+  armed = { btn, t: setTimeout(disarm, 3000) };
+}
+function disarm(){
+  if (!armed) return;
+  clearTimeout(armed.t); armed.btn.textContent = armed.btn.dataset.label; armed.btn.classList.remove('arm'); armed = null;
+}
+$('resetBtn').onclick = () => {
+  if (phase==='idle') { sfx.reset(); resetTimer(); return; }
+  arm($('resetBtn'), 'RESET', () => { sfx.reset(); resetTimer(); });
+};
+document.addEventListener('keydown', e => {
+  if (e.target.tagName==='INPUT' || e.target.tagName==='SELECT') return;
+  if (e.code==='Space') { e.preventDefault(); running ? pause() : start(); }
+});
+
+/* ---------- LCARS sounds (synthesized, no files) ---------- */
+let ac = null;
+function audio(){
+  if (!ac) { try { ac = new (window.AudioContext||window.webkitAudioContext)(); } catch { return null; } }
+  if (ac.state === 'suspended') { try { ac.resume(); } catch {} }
+  return ac;
+}
+function tone(freq, dur, t0 = 0, type = 'sine', vol = .09){
+  const a = audio(); if (!a) return;
+  const o = a.createOscillator(), g = a.createGain(), t = a.currentTime + t0;
+  o.type = type; o.frequency.setValueAtTime(freq, t); o.connect(g); g.connect(a.destination);
+  g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + .012); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+  o.start(t); o.stop(t + dur + .02);
+}
+const sfx = {
+  tap(){ tone(1400,.06); tone(1900,.06,.06); },                               // classic two-tone chirp
+  select(){ tone(1700,.045); },                                               // soft click
+  start(){ tone(880,.08); tone(1320,.08,.08); tone(1760,.14,.16); },          // rising engage
+  pause(){ tone(1100,.09); tone(720,.14,.09); },                              // falling hold
+  skip(){ tone(1500,.05); tone(1500,.05,.09); },                              // double blip
+  reset(){ tone(1000,.07); tone(760,.07,.07); tone(520,.14,.14); },           // descending clear
+  end(){ tone(1046,.08); tone(1318,.08,.08); tone(1568,.18,.16); },           // confirm chord
+  arm(){ tone(600,.12,0,'square',.05); tone(600,.12,.18,'square',.05); },     // caution buzz
+  alert(){ for (let i = 0; i < 3; i++) { tone(1046,.14,i*.34); tone(1568,.16,i*.34+.16); } } // block complete
+};
+function beep(){
+  sfx.alert();
+  if (window.Notification && Notification.permission==='granted')
+    new Notification('POMODORO · LOG', { body: phase==='focus' ? 'Focus block done. Break time.' : 'Break over. Back to it.' });
+}
+if (window.Notification && Notification.permission==='default') { try { Notification.requestPermission(); } catch {} }
+
+/* log & stats */
+function addLog(minutes){
+  log.push({ ts: focusStartedAt || (Date.now() - minutes*60000), subject: $('subject').value, minutes });
+  store.set('pomo:log', JSON.stringify(log));
+  toast('Logged ' + minutes + 'm · ' + $('subject').value); renderAll();
+}
+function inRange(ts){
+  const d = new Date(ts), now = new Date();
+  if (range==='all') return true;
+  if (range==='today') return d.toDateString()===now.toDateString();
+  if (range==='month') return d.getFullYear()===now.getFullYear() && d.getMonth()===now.getMonth();
+  const start = new Date(now); start.setHours(0,0,0,0); start.setDate(now.getDate()-((now.getDay()+6)%7));
+  return d >= start;
+}
+function fmtH(min){ return Math.floor(min/60)+'h '+pad(min%60)+'m'; }
+function streak(){
+  const days = new Set(log.map(e => new Date(e.ts).toDateString()));
+  let n = 0, d = new Date();
+  if (!days.has(d.toDateString())) d.setDate(d.getDate()-1);
+  while (days.has(d.toDateString())) { n++; d.setDate(d.getDate()-1); }
+  return n;
+}
+function renderAll(){
+  const rows = log.filter(e => inRange(e.ts));
+  const tot = rows.reduce((a,e)=>a+e.minutes,0);
+  $('stTime').textContent = fmtH(tot); $('stSessions').textContent = rows.length; $('stStreak').textContent = streak();
+  const by = {}; rows.forEach(e => by[e.subject] = (by[e.subject]||0)+e.minutes);
+  const max = Math.max(1, ...Object.values(by));
+  $('bars').innerHTML = Object.entries(by).sort((a,b)=>b[1]-a[1]).map(([s,m]) =>
+    `<div class="r"><span class="s"><i class="tagc" style="background:${color(s)}"></i>${esc(s)}</span>
+     <div class="t"><i style="width:${m/max*100}%;background:${color(s)}"></i></div><span class="n num">${fmtH(m)}</span></div>`).join('')
+    || '<div class="empty">Nothing in this range yet.</div>';
+  $('logBody').innerHTML = [...log].reverse().slice(0,200).map(e => {
+    const d = new Date(e.ts);
+    return `<tr><td class="num">${d.toLocaleDateString()}</td><td class="num">${pad(d.getHours())}:${pad(d.getMinutes())}</td>
+      <td><i class="tagc" style="background:${color(e.subject)}"></i>${esc(e.subject)}</td><td class="num">${e.minutes}</td></tr>`;
+  }).join('');
+  $('logEmpty').style.display = log.length ? 'none' : 'block';
+}
+function esc(s){ return s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+document.querySelectorAll('[data-range]').forEach(b => b.onclick = () => {
+  sfx.select(); range = b.dataset.range; document.querySelectorAll('[data-range]').forEach(x => x.classList.toggle('on', x===b)); renderAll();
+});
+$('backupBtn').onclick = async () => {
+  sfx.tap();
+  if (!log.length) { toast('Nothing to back up yet'); return; }
+  const tot = log.reduce((a,e)=>a+e.minutes,0);
+  const lines = [...log].reverse().map(e => { const d = new Date(e.ts); return `${d.toISOString().slice(0,10)} ${pad(d.getHours())}:${pad(d.getMinutes())}  ${e.subject} — ${e.minutes}m`; });
+  const text = `pomodoro.log backup — ${new Date().toLocaleString()}\ntotal ${fmtH(tot)} · ${log.length} sessions\n\n` + lines.join('\n');
+  try {
+    if (navigator.share) { await navigator.share({ title: 'pomodoro.log', text }); }
+    else { await navigator.clipboard.writeText(text); toast('Copied — paste into Notes'); }
+  } catch (err) {
+    if (err && err.name === 'AbortError') return;
+    try { await navigator.clipboard.writeText(text); toast('Copied — paste into Notes'); } catch { toast('Could not open share sheet'); }
+  }
+};
+$('exportBtn').onclick = () => {
+  sfx.tap();
+  const csv = 'date,start_time,subject,minutes\n' + log.map(e => { const d = new Date(e.ts); return `${d.toISOString().slice(0,10)},${pad(d.getHours())}:${pad(d.getMinutes())},"${e.subject.replace(/"/g,'""')}",${e.minutes}`; }).join('\n');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'})); a.download = 'pomodoro-log.csv'; a.click();
+};
+$('clearBtn').onclick = () => arm($('clearBtn'), 'CLEAR', () => { log = []; store.set('pomo:log','[]'); renderAll(); sfx.reset(); toast('Log cleared'); });
+function toast(msg){ const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(t._t); t._t = setTimeout(()=>t.classList.remove('show'), 2200); }
+</script>
+</body>
+</html>
