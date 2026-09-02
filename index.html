@@ -102,23 +102,27 @@
     border:0;border-bottom:3px solid var(--lilac);border-radius:6px 6px 0 0;padding:9px 10px;-webkit-appearance:none;appearance:none;text-transform:uppercase}
   input:focus{outline:0;border-bottom-color:var(--orange)}
   .row{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end;margin-bottom:12px}
-  .row .b{height:40px;min-width:44px}
-  .durs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;max-width:260px}
-  .durs .cell{background:var(--g1);border-radius:6px;border-top:3px solid var(--lilac);padding:3px 3px 4px;text-align:center}
+  .row .b{height:48px;min-width:44px}
+  #addSubjBtn{width:54px;min-width:54px;font-size:28px;line-height:1;align-items:center;justify-content:center;padding-bottom:0}
+  .durs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;max-width:300px}
+  .durs .cell{background:var(--g1);border-radius:8px;border-top:4px solid var(--lilac);padding:8px 6px 9px;text-align:center}
   .durs .cell:nth-child(2){border-top-color:var(--tan)} .durs .cell:nth-child(3){border-top-color:var(--peri)}
-  .durs .cell input{background:transparent;border:0;border-radius:0;padding:0;width:100%;text-align:center;font-size:22px;line-height:1.1;color:var(--tan);font-weight:700}
+  .durs .cell input{background:transparent;border:0;border-radius:0;padding:0;width:100%;text-align:center;font-size:30px;line-height:1.1;color:var(--tan);font-weight:700}
   .durs .cell input:focus{outline:0;color:var(--orange)}
-  .durs .cell span{display:block;font-size:9px;color:var(--peri);margin-top:1px}
-  .lb{display:flex;align-items:center;gap:10px;margin:12px 0 10px}
-  .lb label{margin:0;flex:none} .lb input{width:66px;text-align:center} .lb .unit{font-size:10px;color:var(--peri)}
-  .note{font-size:10px;line-height:1.7;color:var(--peri);margin-top:6px;padding-left:9px;border-left:3px solid var(--lilac);border-radius:2px;text-transform:none;letter-spacing:0}
+  .durs .cell span{display:block;font-size:10.5px;color:var(--peri);margin-top:3px}
+  .lb{display:flex;align-items:center;gap:10px;margin:14px 0 10px}
+  .lb label{margin:0;flex:none} .lb input{width:84px;font-size:20px;padding:11px 8px;text-align:center} .lb .unit{font-size:10.5px;color:var(--peri)}
+  .note{font-size:11.5px;line-height:1.65;color:var(--tan);margin-top:8px;padding:9px 10px 9px 12px;background:var(--g1);border-left:3px solid var(--lilac);border-radius:2px 6px 6px 2px;text-transform:none;letter-spacing:0}
+  .note p{margin:0 0 6px}
+  .note p:last-child{margin-bottom:0}
+  .note b{color:var(--txt)}
 
   /* custom dropdown (flat) */
   .native-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);border:0}
   .dd{position:relative}
-  .dd-trigger{width:100%;font:inherit;font-stretch:condensed;font-size:14px;font-weight:700;color:#000;cursor:pointer;display:flex;align-items:center;
-    height:40px;border:0;border-radius:20px;overflow:hidden;background:var(--lilac);text-transform:uppercase;letter-spacing:.04em;padding:0 12px}
-  .dd-caret{width:14px;flex:none;font-size:10px;transition:transform .15s;text-align:right}
+  .dd-trigger{width:100%;font:inherit;font-stretch:condensed;font-size:19px;font-weight:700;color:#000;cursor:pointer;display:flex;align-items:center;
+    height:48px;border:0;border-radius:24px;overflow:hidden;background:var(--lilac);text-transform:uppercase;letter-spacing:.04em;padding:0 12px}
+  .dd-caret{width:14px;flex:none;font-size:12px;transition:transform .15s;text-align:right}
   .dd-trigger::before{content:"";width:14px;flex:none}
   .dd-label{flex:1;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .dd-trigger[aria-expanded="true"] .dd-caret{transform:rotate(180deg)}
@@ -137,9 +141,9 @@
   .range .b{--bc:var(--g3);color:var(--txt);height:30px;font-size:11px;padding:0 8px 4px;border-radius:6px}
   .range .b:first-child{border-radius:15px 6px 6px 15px} .range .b:last-child{border-radius:6px 15px 15px 6px}
   .range .b.on{--bc:var(--butter);color:#000}
-  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+  .stats{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:12px}
   .stat{background:var(--g1);border-radius:6px;padding:8px 8px 7px;border-top:4px solid var(--sc)}
-  .stat:nth-child(1){--sc:var(--salmon)} .stat:nth-child(2){--sc:var(--tan)} .stat:nth-child(3){--sc:var(--lilac)}
+  .stat:nth-child(1){--sc:var(--salmon)} .stat:nth-child(2){--sc:var(--tan)} .stat:nth-child(3){--sc:var(--lilac)} .stat:nth-child(4){--sc:var(--ice)}
   .stat b{display:block;font-size:22px;font-weight:700;line-height:1;color:var(--sc)}
   .stat span{font-size:9px;color:var(--peri)}
   .bars{display:flex;flex-direction:column;gap:6px}
@@ -224,7 +228,13 @@
         <div class="cell"><input type="number" id="longMin" min="1" max="90" value="15" inputmode="numeric"><span>Long</span></div>
       </div>
       <div class="lb"><label for="every">Long break every</label><input type="number" id="every" min="2" max="8" value="4" inputmode="numeric"><span class="unit">blocks</span></div>
-      <div class="note">Focus = one work block (the only time that's logged). Short = break after each block. Long = the bigger break after every N blocks. End + log saves partial time, then stops. Reset discards.</div>
+      <div class="note">
+        <p><b>Focus</b> — one work block. The only time that's logged.</p>
+        <p><b>Short</b> — break after each block.</p>
+        <p><b>Long</b> — the bigger break after every N blocks.</p>
+        <p><b>End + log</b> — saves partial time, then stops.</p>
+        <p><b>Reset</b> — discards.</p>
+      </div>
     </div>
   </section>
 
@@ -240,6 +250,7 @@
         <div class="stat"><b class="num" id="stTime">0h 00m</b><span>Focused</span></div>
         <div class="stat"><b class="num" id="stSessions">0</b><span>Sessions</span></div>
         <div class="stat"><b class="num" id="stStreak">0</b><span>Day streak</span></div>
+        <div class="stat"><b class="num" id="stAvg">0h 00m</b><span>Avg / day since start</span></div>
       </div>
       <div class="bars" id="bars"></div>
     </div>
@@ -485,6 +496,13 @@ function inRange(ts){
   return d >= start;
 }
 function fmtH(min){ return Math.floor(min/60)+'h '+pad(min%60)+'m'; }
+function daysSinceStart(){
+  if (!log.length) return 0;
+  const first = new Date(Math.min(...log.map(e => e.ts)));
+  const firstDay = new Date(first.getFullYear(), first.getMonth(), first.getDate());
+  const today = new Date(); const todayDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  return Math.round((todayDay - firstDay) / 86400000) + 1;
+}
 function streak(){
   const days = new Set(log.map(e => new Date(e.ts).toDateString()));
   let n = 0, d = new Date();
@@ -496,6 +514,8 @@ function renderAll(){
   const rows = log.filter(e => inRange(e.ts));
   const tot = rows.reduce((a,e)=>a+e.minutes,0);
   $('stTime').textContent = fmtH(tot); $('stSessions').textContent = rows.length; $('stStreak').textContent = streak();
+  const allTot = log.reduce((a,e)=>a+e.minutes,0), days = daysSinceStart();
+  $('stAvg').textContent = fmtH(days ? Math.round(allTot/days) : 0);
   const by = {}; rows.forEach(e => by[e.subject] = (by[e.subject]||0)+e.minutes);
   const max = Math.max(1, ...Object.values(by));
   $('bars').innerHTML = Object.entries(by).sort((a,b)=>b[1]-a[1]).map(([s,m]) =>
