@@ -124,9 +124,13 @@
   .dd-trigger[aria-expanded="true"] .dd-caret{transform:rotate(180deg)}
   .dd-menu{list-style:none;margin:6px 0 0;display:none;flex-direction:column;gap:3px;max-height:250px;overflow:auto;-webkit-overflow-scrolling:touch}
   .dd-menu.show{display:flex}
-  .dd-item{display:flex;align-items:center;justify-content:center;height:34px;border-radius:17px;background:var(--g1);color:var(--txt);font-size:13px;font-weight:700;cursor:pointer;letter-spacing:.04em}
+  .dd-item{display:flex;align-items:center;height:34px;border-radius:17px;background:var(--g1);color:var(--txt);font-size:13px;font-weight:700;letter-spacing:.04em;padding:0 4px 0 16px;gap:2px}
   .dd-item.sel{background:var(--tan);color:#000}
-  .dd-item:active{filter:brightness(1.2)}
+  .dd-item-label{flex:1;cursor:pointer;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .dd-item-label:active{filter:brightness(1.2)}
+  .dd-del{flex:none;width:26px;height:26px;border-radius:50%;border:0;background:transparent;color:inherit;opacity:.5;font-size:16px;font-weight:700;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:opacity .1s,background .1s}
+  .dd-del:active{opacity:1}
+  .dd-del.arm{background:var(--alert);color:#fff;opacity:1}
 
   /* ---------- progress ---------- */
   .range{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-bottom:12px}
@@ -287,7 +291,7 @@ const color = s => PALETTE[Math.max(0, subjects.indexOf(s)) % PALETTE.length];
 (async function init(){
   const s = await store.get('pomo:settings'); if (s) settings = {...settings, ...JSON.parse(s)};
   const sj = await store.get('pomo:subjects');
-  if (sj) { const saved = JSON.parse(sj).map(s => RENAMES[s] || s); const custom = saved.filter(s => !DEFAULT_SUBJECTS.includes(s)); subjects = [...DEFAULT_SUBJECTS, ...custom]; }
+  if (sj) { subjects = JSON.parse(sj).map(s => RENAMES[s] || s); }
   subjects = [...new Set(subjects)].sort(byName);
   if (JSON.stringify(subjects) !== sj) store.set('pomo:subjects', JSON.stringify(subjects));
   if (RENAMES[settings.subject]) settings.subject = RENAMES[settings.subject];
@@ -313,9 +317,27 @@ function renderSubjects(){
   if (!subjects.includes(settings.subject)) settings.subject = subjects[0] || '';
   sel.value = settings.subject;
   $('ddMenu').innerHTML = subjects.map((s,i) =>
-    `<li class="dd-item${s===settings.subject?' sel':''}" data-i="${i}" role="option">${esc(s)}</li>`).join('');
-  $('ddMenu').querySelectorAll('.dd-item').forEach(li => li.addEventListener('click', () => selectSubject(subjects[+li.dataset.i])));
+    `<li class="dd-item${s===settings.subject?' sel':''}" data-i="${i}" role="option">
+       <span class="dd-item-label">${esc(s)}</span>
+       ${subjects.length > 1 ? `<button type="button" class="dd-del" data-i="${i}" title="Delete ${esc(s)}" aria-label="Delete ${esc(s)}">×</button>` : ''}
+     </li>`).join('');
+  $('ddMenu').querySelectorAll('.dd-item-label').forEach(el => el.addEventListener('click', () => selectSubject(subjects[+el.closest('.dd-item').dataset.i])));
+  $('ddMenu').querySelectorAll('.dd-del').forEach(btn => btn.addEventListener('click', e => { e.stopPropagation(); armDelete(btn, +btn.dataset.i); }));
   $('ddLabel').textContent = settings.subject || '—';
+}
+let armedDel = null;
+function armDelete(btn, i){
+  if (armedDel && armedDel.btn === btn) { clearTimeout(armedDel.t); armedDel = null; deleteSubject(subjects[i]); return; }
+  if (armedDel) { armedDel.btn.classList.remove('arm'); armedDel.btn.textContent = '×'; clearTimeout(armedDel.t); }
+  sfx.arm(); btn.classList.add('arm'); btn.textContent = '✓';
+  armedDel = { btn, t: setTimeout(() => { btn.classList.remove('arm'); btn.textContent = '×'; armedDel = null; }, 3000) };
+}
+function deleteSubject(name){
+  if (subjects.length <= 1) { toast('Need at least one subject'); return; }
+  subjects = subjects.filter(s => s !== name);
+  store.set('pomo:subjects', JSON.stringify(subjects));
+  if (settings.subject === name) { settings.subject = subjects[0]; saveSettings(); }
+  sfx.reset(); toast('Deleted ' + name); renderSubjects();
 }
 function selectSubject(v){ sfx.select(); settings.subject = v; $('subject').value = v; saveSettings(); renderSubjects(); closeDd(); }
 let ddOpen = false;
