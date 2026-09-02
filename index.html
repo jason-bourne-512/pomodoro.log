@@ -57,8 +57,8 @@
   .lc .bot::after{content:"";position:absolute;right:0;top:0;height:8px;width:22%;background:var(--c2);border-radius:4px 0 0 4px}
 
   /* ---------- flat buttons ---------- */
-  .b{font:inherit;font-stretch:condensed;border:0;background:var(--bc,var(--tan));color:#000;font-weight:700;font-size:13px;letter-spacing:.03em;text-transform:uppercase;
-    cursor:pointer;padding:0 14px;height:40px;border-radius:20px 6px 6px 20px;text-align:right;display:flex;align-items:flex-end;justify-content:flex-end;padding-bottom:6px;
+  .b{font:inherit;font-stretch:condensed;border:0;background:var(--bc,var(--tan));color:#000;font-weight:700;font-size:13px;letter-spacing:.06em;text-transform:uppercase;
+    cursor:pointer;padding:0 16px;height:40px;border-radius:22px 8px 8px 22px;text-align:right;display:flex;align-items:center;justify-content:flex-end;
     transition:filter .1s,opacity .1s}
   .b:active{filter:brightness(1.25)}
   .b:focus-visible{outline:2px solid #fff;outline-offset:2px}
@@ -115,10 +115,11 @@
   .durs .cell span{display:block;font-size:10.5px;color:var(--peri);margin-top:3px}
   .lb{display:flex;align-items:center;gap:10px;margin:14px 0 10px}
   .lb label{margin:0;flex:none} .lb input{width:84px;font-size:20px;padding:11px 8px;text-align:center} .lb .unit{font-size:10.5px;color:var(--peri)}
-  .note{font-size:11.5px;line-height:1.65;color:var(--tan);margin-top:8px;padding:9px 10px 9px 12px;background:var(--g1);border-left:3px solid var(--lilac);border-radius:2px 6px 6px 2px;text-transform:none;letter-spacing:0}
-  .note p{margin:0 0 6px}
-  .note p:last-child{margin-bottom:0}
-  .note b{color:var(--txt)}
+  .note{margin-top:8px;padding:10px 12px;background:var(--g1);border-left:3px solid var(--lilac);border-radius:2px 6px 6px 2px}
+  .note-row{margin-bottom:8px}
+  .note-row:last-child{margin-bottom:0}
+  .note-row b{display:block;font-stretch:condensed;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--orange)}
+  .note-row span{display:block;font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;font-stretch:normal;font-size:11.5px;line-height:1.4;color:var(--txt);text-transform:none;letter-spacing:.01em;margin-top:2px}
 
   /* custom dropdown (flat) */
   .native-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);border:0}
@@ -232,11 +233,11 @@
       </div>
       <div class="lb"><label for="every">Long break every</label><input type="number" id="every" min="2" max="8" value="4" inputmode="numeric"><span class="unit">blocks</span></div>
       <div class="note">
-        <p><b>Focus</b> — one work block. The only time that's logged.</p>
-        <p><b>Short</b> — break after each block.</p>
-        <p><b>Long</b> — the bigger break after every N blocks.</p>
-        <p><b>End + log</b> — saves partial time, then stops.</p>
-        <p><b>Reset</b> — discards.</p>
+        <div class="note-row"><b>Focus</b><span>One work block. The only time that's logged.</span></div>
+        <div class="note-row"><b>Short</b><span>Break after each block.</span></div>
+        <div class="note-row"><b>Long</b><span>The bigger break after every N blocks.</span></div>
+        <div class="note-row"><b>End + log</b><span>Saves partial time, then stops.</span></div>
+        <div class="note-row"><b>Reset</b><span>Discards.</span></div>
       </div>
     </div>
   </section>
