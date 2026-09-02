@@ -115,10 +115,11 @@
   .durs .cell span{display:block;font-size:10.5px;color:var(--peri);margin-top:3px}
   .lb{display:flex;align-items:center;gap:10px;margin:14px 0 10px}
   .lb label{margin:0;flex:none} .lb input{width:84px;font-size:20px;padding:11px 8px;text-align:center} .lb .unit{font-size:10.5px;color:var(--peri)}
-  .note{font-family:"Share Tech Mono",monospace;font-size:9.5px;line-height:1.55;color:var(--txt);margin-top:6px;padding:7px 9px;background:var(--g1);border-left:3px solid var(--lilac);border-radius:2px 6px 6px 2px;text-transform:none;letter-spacing:.01em}
-  .note p{margin:0 0 4px}
+  .note{font-size:12px;line-height:1.7;color:var(--tan);margin-top:6px;padding:8px 10px;background:var(--g1);border-left:3px solid var(--lilac);border-radius:2px 6px 6px 2px}
+  .note p{margin:0 0 5px}
   .note p:last-child{margin-bottom:0}
-  .note b{color:var(--orange);font-weight:700;text-transform:uppercase;letter-spacing:.03em}
+  .note b{color:var(--ice);font-weight:700}
+  .note .dot{display:inline-block;width:4px;height:4px;border-radius:50%;margin:0 6px 1px 4px;vertical-align:middle;background:var(--lilac)}
 
   /* custom dropdown (flat) */
   .native-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);border:0}
@@ -232,11 +233,11 @@
       </div>
       <div class="lb"><label for="every">Long break every</label><input type="number" id="every" min="2" max="8" value="4" inputmode="numeric"><span class="unit">blocks</span></div>
       <div class="note">
-        <p><b>Focus</b> — one work block. The only time that's logged.</p>
-        <p><b>Short</b> — break after each block.</p>
-        <p><b>Long</b> — the bigger break after every N blocks.</p>
-        <p><b>End + log</b> — saves partial time, then stops.</p>
-        <p><b>Reset</b> — discards.</p>
+        <p><b>Focus</b><i class="dot"></i>one work block — the only time that's logged</p>
+        <p><b>Short</b><i class="dot"></i>break after each block</p>
+        <p><b>Long</b><i class="dot"></i>the bigger break after every N blocks</p>
+        <p><b>End + log</b><i class="dot"></i>saves partial time then stops</p>
+        <p><b>Reset</b><i class="dot"></i>discards</p>
       </div>
     </div>
   </section>
