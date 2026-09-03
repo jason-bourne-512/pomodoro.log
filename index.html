@@ -70,10 +70,16 @@
 
   /* ---------- timer ---------- */
   .status{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--tan);margin-bottom:6px}
-  .status .ind{width:44px;height:10px;border-radius:5px;background:var(--g3)}
-  .status .ind.on{background:var(--orange)}
-  .status .ind.brk{background:var(--ice)}
+  .status .blips{display:flex;align-items:center;gap:4px}
+  .status .ind{width:36px;height:10px;border-radius:5px;background:var(--g3)}
+  .status .ind.on{background:var(--orange);animation:blink 1.1s steps(1) infinite}
+  .status .ind.brk{background:var(--ice);animation:blink 1.1s steps(1) infinite}
   .status .ind.pz{background:var(--butter)}
+  .status .blip{width:8px;height:8px;border-radius:50%;background:var(--g3)}
+  .running .status .blip{background:var(--orange);animation:blink 1.1s steps(1) infinite}
+  .running.break .status .blip{background:var(--ice)}
+  .running .status .blip:nth-child(2){animation-delay:.37s}
+  @keyframes blink{0%,49%{opacity:1}50%,100%{opacity:.15}}
   .status b{color:var(--salmon);font-weight:700}
   .gauge{position:relative;width:min(62vw,214px);margin:2px auto 0;aspect-ratio:1}
   .ring-svg{width:100%;height:100%;transform:rotate(-90deg);display:block}
@@ -81,8 +87,14 @@
   .ring-track{stroke:var(--g2);stroke-width:9}
   .ring-prog{stroke:var(--orange);stroke-width:9;stroke-linecap:round;stroke-dasharray:653.45;stroke-dashoffset:653.45;transition:stroke-dashoffset 1s linear}
   .break .ring-prog{stroke:var(--ice)}
+  .ring-sweep{stroke:#fff;stroke-width:3;stroke-linecap:round;stroke-dasharray:14 639.45;opacity:0;transition:opacity .3s}
+  .running .ring-sweep{opacity:.55;animation:ringsweep 2.6s linear infinite}
+  .running.break .ring-sweep{stroke:var(--ice)}
+  @keyframes ringsweep{from{stroke-dashoffset:0}to{stroke-dashoffset:-653.45}}
+  .flash .in{animation:alertflash .8s ease-in-out 2}
+  @keyframes alertflash{0%,100%{background:#000}30%,60%{background:var(--alert)}}
   .gmid{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
-  .clock{font-size:clamp(50px,17vw,74px);font-weight:700;line-height:.9;letter-spacing:0;color:var(--txt)}
+  .clock{font-size:clamp(50px,17vw,74px);font-weight:700;line-height:.9;letter-spacing:0;color:var(--txt);cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent}
   .running .clock{color:var(--salmon)}
   .running.break .clock{color:var(--ice)}
   .phase{font-size:12px;color:var(--tan);margin:14px auto 0;padding:6px 14px;text-align:center;background:var(--g1);border-radius:14px;display:table;letter-spacing:.06em}
@@ -178,11 +190,12 @@
     <span class="code num">01-TIMER</span><span class="ttl">FOCUS CONTROL</span>
     <span class="rail"><i data-n="47"></i><i></i><i></i></span><span class="bot"></span>
     <div class="in">
-      <div class="status"><span>UNIT 01</span><span class="ind" id="ind"></span><span>STATUS <b id="statusWord">IDLE</b></span></div>
+      <div class="status"><span>UNIT 01</span><span class="blips"><i class="blip"></i><i class="blip"></i><span class="ind" id="ind"></span></span><span>STATUS <b id="statusWord">IDLE</b></span></div>
       <div class="gauge">
         <svg class="ring-svg" viewBox="0 0 240 240" aria-hidden="true">
           <circle class="ring-track" cx="120" cy="120" r="104"></circle>
           <circle class="ring-prog" id="ring" cx="120" cy="120" r="104"></circle>
+          <circle class="ring-sweep" cx="120" cy="120" r="104"></circle>
         </svg>
         <div class="gmid"><div class="clock num" id="clock">25:00</div></div>
       </div>
@@ -285,7 +298,7 @@ let subjects = [...DEFAULT_SUBJECTS];
 let log = [];
 let settings = { focus:25, short:5, long:15, every:4, subject:'Calculus' };
 let range = 'today';
-let phase = 'idle', running = false, endAt = 0, remaining = 0, total = 0, tick = null, focusCount = 0, focusStartedAt = 0;
+let phase = 'idle', running = false, endAt = 0, remaining = 0, total = 0, tick = null, focusCount = 0, focusStartedAt = 0, showElapsed = false;
 
 const $ = id => document.getElementById(id);
 const pad = n => String(n).padStart(2,'0');
@@ -388,8 +401,14 @@ function pause(){
 }
 function stopTick(){ if (tick) { clearInterval(tick); tick = null; } }
 function step(){ remaining = Math.max(0, endAt - Date.now()); draw(); if (remaining <= 0) finishPhase(false); }
+function flashAlert(){
+  const p = $('timerPanel');
+  p.classList.remove('flash'); void p.offsetWidth; p.classList.add('flash');
+  setTimeout(() => p.classList.remove('flash'), 1700);
+}
 function finishPhase(skipped){
   stopTick(); running = false;
+  if (!skipped) flashAlert();
   if (phase==='focus') {
     const done = skipped ? Math.round((total - remaining)/60000) : Math.round(total/60000);
     if (done >= 1) addLog(done);
@@ -399,9 +418,11 @@ function finishPhase(skipped){
   $('startBtn').disabled = false; start();
 }
 function draw(){
-  const m = Math.floor(remaining/60000), s = Math.floor((remaining%60000)/1000);
+  const shown = showElapsed ? Math.max(0, total - remaining) : remaining;
+  const m = Math.floor(shown/60000), s = Math.floor((shown%60000)/1000);
   $('clock').textContent = pad(m)+':'+pad(s);
-  document.title = (phase==='idle' ? '' : pad(m)+':'+pad(s)+' · ') + 'POMODORO · LOG';
+  const rm = Math.floor(remaining/60000), rs = Math.floor((remaining%60000)/1000);
+  document.title = (phase==='idle' ? '' : pad(rm)+':'+pad(rs)+' · ') + 'POMODORO · LOG';
   const frac = total ? (total-remaining)/total : 0;
   $('ring').style.strokeDashoffset = (RING_C*(1-frac)).toFixed(1);
   const dots = document.querySelectorAll('#dots i'); const lit = Math.round(frac*dots.length);
@@ -412,6 +433,7 @@ function draw(){
     $('cycle').textContent = 'BLOCK ' + (focusCount % settings.every + (phase==='focus'?1:0)) + ' OF ' + settings.every + (focusCount ? '  ·  ' + focusCount + ' DONE THIS RUN' : '');
   }
 }
+$('clock').onclick = () => { showElapsed = !showElapsed; draw(); };
 $('startBtn').onclick = () => { sfx.start(); start(); };
 $('pauseBtn').onclick = () => { sfx.pause(); pause(); };
 $('skipBtn').onclick = () => { sfx.skip(); finishPhase(true); };
