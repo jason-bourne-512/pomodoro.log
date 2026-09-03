@@ -482,12 +482,13 @@ function expandSections(){
 }
 $('clock').onclick = () => { showElapsed = !showElapsed; draw(); };
 $('startBtn').onclick = () => {
+  stopAlarm();
   if (running) { sfx.pause(); pause(); expandSections(); }
   else { sfx.start(); start(); collapseSections(); }
 };
-$('skipBtn').onclick = () => { sfx.skip(); finishPhase(true); expandSections(); };
+$('skipBtn').onclick = () => { stopAlarm(); sfx.skip(); finishPhase(true); expandSections(); };
 $('endBtn').onclick = () => {
-  sfx.end();
+  stopAlarm(); sfx.end();
   if (phase==='focus') { const done = Math.round((total - remaining)/60000); if (done >= 1) addLog(done); else toast('Under a minute — nothing logged'); }
   focusStartedAt = 0; disarm(); resetTimer();
   expandSections();
@@ -505,6 +506,7 @@ function disarm(){
   clearTimeout(armed.t); armed.btn.textContent = armed.btn.dataset.label; armed.btn.classList.remove('arm'); armed = null;
 }
 $('resetBtn').onclick = () => {
+  stopAlarm();
   if (phase==='idle') { sfx.reset(); resetTimer(); expandSections(); return; }
   arm($('resetBtn'), 'RESET', () => { sfx.reset(); resetTimer(); expandSections(); });
 };
@@ -538,8 +540,21 @@ const sfx = {
   arm(){ tone(600,.12,0,'square',.05); tone(600,.12,.18,'square',.05); },     // caution buzz
   alert(){ for (let i = 0; i < 3; i++) { tone(1046,.14,i*.34); tone(1568,.16,i*.34+.16); } } // block complete
 };
+let alarmTimer = null, alarmCount = 0;
+function stopAlarm(){ if (alarmTimer) { clearInterval(alarmTimer); alarmTimer = null; } }
+function startAlarm(){
+  stopAlarm(); alarmCount = 0;
+  const ring = () => {
+    sfx.alert();
+    if (navigator.vibrate) navigator.vibrate([200,100,200]);
+    alarmCount++;
+    if (alarmCount >= 6) stopAlarm();
+  };
+  ring();
+  alarmTimer = setInterval(ring, 1400);
+}
 function beep(){
-  sfx.alert();
+  startAlarm();
   if (window.Notification && Notification.permission==='granted')
     new Notification('POMODORO · LOG', { body: phase==='focus' ? 'Focus block done. Break time.' : 'Break over. Back to it.' });
 }
