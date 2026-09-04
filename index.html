@@ -354,8 +354,41 @@ const color = s => PALETTE[Math.max(0, subjects.indexOf(s)) % PALETTE.length];
   if (lg) { log = JSON.parse(lg); let moved = false; log.forEach(e => { if (RENAMES[e.subject]) { e.subject = RENAMES[e.subject]; moved = true; } }); if (moved) store.set('pomo:log', JSON.stringify(log)); }
   $('focusMin').value = settings.focus; $('shortMin').value = settings.short;
   $('longMin').value = settings.long; $('every').value = settings.every;
-  renderSubjects(); resetTimer(); renderAll();
+  renderSubjects(); await restoreLive(); renderAll();
 })();
+
+function saveLive(){
+  store.set('pomo:live', JSON.stringify({ phase, running, endAt, remaining, total, focusCount, focusStartedAt }));
+}
+async function restoreLive(){
+  const raw = await store.get('pomo:live');
+  let st = null; try { st = raw ? JSON.parse(raw) : null; } catch {}
+  if (!st || !st.phase || st.phase === 'idle') { resetTimer(); return; }
+  phase = st.phase; total = st.total || settings.focus*60*1000;
+  focusCount = st.focusCount || 0; focusStartedAt = st.focusStartedAt || 0;
+  $('timerPanel').classList.toggle('break', phase!=='focus');
+  $('skipBtn').disabled = false; $('endBtn').disabled = false;
+  if (st.running) {
+    endAt = st.endAt;
+    remaining = Math.max(0, endAt - Date.now());
+    if (remaining <= 0) {
+      // block(s) finished while backgrounded — replay natural completion (logs it, chains next phase)
+      remaining = 0; finishPhase(false); collapseSections();
+    } else {
+      running = true;
+      $('timerPanel').classList.add('running');
+      $('statusWord').textContent = phase==='focus' ? 'FOCUS' : 'BREAK';
+      $('startBtn').textContent = 'PAUSE';
+      setInd(); stopTick(); tick = setInterval(step, 250); step();
+      collapseSections();
+    }
+  } else {
+    remaining = st.remaining != null ? st.remaining : total;
+    running = false;
+    $('startBtn').textContent = 'RESUME';
+    setInd(); draw();
+  }
+}
 
 function saveSettings(){
   settings.focus = +$('focusMin').value || 25; settings.short = +$('shortMin').value || 5;
@@ -420,7 +453,7 @@ function resetTimer(){
   $('phase').textContent = 'SELECT A SUBJECT'; $('cycle').textContent = ''; $('statusWord').textContent = 'IDLE';
   $('startBtn').textContent = 'START'; $('startBtn').disabled = false;
   $('skipBtn').disabled = true; $('endBtn').disabled = true;
-  setInd(); draw();
+  setInd(); draw(); saveLive();
 }
 function start(){
   if (phase==='idle') setPhase('focus');
@@ -430,13 +463,13 @@ function start(){
   $('statusWord').textContent = phase==='focus' ? 'FOCUS' : 'BREAK';
   $('startBtn').textContent = 'PAUSE';
   $('skipBtn').disabled = false; $('endBtn').disabled = false;
-  setInd(); stopTick(); tick = setInterval(step, 250); step();
+  setInd(); stopTick(); tick = setInterval(step, 250); step(); saveLive();
 }
 function pause(){
   running = false; remaining = Math.max(0, endAt - Date.now()); stopTick();
   $('timerPanel').classList.remove('running'); $('statusWord').textContent = 'PAUSED';
   $('startBtn').textContent = 'RESUME';
-  setInd(); draw();
+  setInd(); draw(); saveLive();
 }
 function stopTick(){ if (tick) { clearInterval(tick); tick = null; } }
 function step(){ remaining = Math.max(0, endAt - Date.now()); draw(); if (remaining <= 0) finishPhase(false); }
@@ -514,6 +547,13 @@ document.addEventListener('keydown', e => {
   if (e.target.tagName==='INPUT' || e.target.tagName==='SELECT') return;
   if (e.code==='Space') { e.preventDefault(); running ? pause() : start(); }
 });
+
+/* persist the live timer before the tab/app is backgrounded or evicted, and
+   catch up immediately (rather than waiting for the next 250ms tick) on return */
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { saveLive(); } else if (running) { step(); }
+});
+window.addEventListener('pagehide', saveLive);
 
 /* ---------- LCARS sounds (synthesized, no files) ---------- */
 let ac = null;
